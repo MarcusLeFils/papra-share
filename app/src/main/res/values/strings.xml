@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Papra Share</string>
+
+    <string name="settings_title">Configuration Papra</string>
+    <string name="settings_instance_url_label">URL de l\u2019instance</string>
+    <string name="settings_instance_url_hint">https://api.papra.app</string>
+    <string name="settings_api_key_label">Clé API</string>
+    <string name="settings_org_id_label">ID d\u2019organisation</string>
+    <string name="settings_org_id_hint">Identifiant de l\u2019organisation cible</string>
+    <string name="settings_save">Enregistrer</string>
+    <string name="settings_saved">Configuration enregistrée.</string>
+    <string name="settings_permission_hint">Votre clé API doit disposer de la permission documents:create.</string>
+    <string name="settings_done">Terminé</string>
+
+    <string name="share_title">Envoyer vers Papra</string>
+    <string name="share_uploading">Envoi en cours…</string>
+    <string name="share_not_configured">Papra n\u2019est pas configuré.</string>
+    <string name="share_not_configured_action">Ouvrir les réglages</string>
+    <string name="share_close">Fermer</string>
+    <string name="share_show_details">Détails</string>
+    <string name="share_hide_details">Masquer les détails</string>
+</resources>
