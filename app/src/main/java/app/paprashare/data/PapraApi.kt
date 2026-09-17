@@ -12,11 +12,30 @@ import okio.BufferedSink
 import java.io.InputStream
 import java.util.concurrent.TimeUnit
 
+/**
+ * Catégorie d'un échec d'upload, indépendante de la locale.
+ * La couche UI la mappe vers une ressource de chaîne (`R.string`).
+ */
+enum class PapraErrorKind {
+    NETWORK,
+    INVALID_RESPONSE,
+    BAD_REQUEST,
+    UNAUTHORIZED,
+    FORBIDDEN,
+    NOT_FOUND,
+    DUPLICATE,
+    TOO_LARGE,
+    RATE_LIMITED,
+    SERVER_ERROR,
+    HTTP,
+    OPEN_FILE,
+}
+
 /** Résultat d'un upload. */
 sealed class UploadResult {
     data class Success(val documentId: String) : UploadResult()
     data class Failure(
-        val message: String,
+        val kind: PapraErrorKind,
         val details: String? = null,
     ) : UploadResult()
 }
@@ -88,16 +107,16 @@ class PapraApi {
                 val body = response.body?.string().orEmpty()
                 if (!response.isSuccessful) {
                     UploadResult.Failure(
-                        message = friendlyError(response.code),
-                        details = fullError("HTTP ${response.code}", response.message, body),
+                        kind = errorKind(response.code),
+                        details = fullError(response.code, response.message, body),
                     )
                 } else {
                     val documentId = extractDocumentId(body)
                     if (documentId == null) {
                         // fail loud : réponse 2xx mais id introuvable → contrat non respecté.
                         UploadResult.Failure(
-                            message = "Le serveur n'a pas renvoyé d'identifiant de document.",
-                            details = fullError(null, "Réponse inattendue", body),
+                            kind = PapraErrorKind.INVALID_RESPONSE,
+                            details = fullError(-1, "no document id", body),
                         )
                     } else {
                         UploadResult.Success(documentId)
@@ -110,7 +129,7 @@ class PapraApi {
             throw e
         } catch (e: Exception) {
             UploadResult.Failure(
-                message = "Impossible de joindre l'instance Papra.",
+                kind = PapraErrorKind.NETWORK,
                 details = e.message ?: e.javaClass.simpleName,
             )
         } finally {
@@ -118,24 +137,24 @@ class PapraApi {
         }
     }
 
-    /** Message lisible d'après le code HTTP, pour les erreurs fréquentes. */
-    private fun friendlyError(code: Int): String = when (code) {
-        400 -> "Requête invalide envoyée au serveur."
-        401 -> "Authentification refusée : vérifiez la clé API."
-        403 -> "Accès refusé : la clé API doit avoir la permission documents:create."
-        404 -> "Ressource introuvable : vérifiez l'URL de l'instance et l'ID d'organisation."
-        409 -> "Document en double : un document identique existe déjà."
-        413 -> "Fichier trop volumineux pour l'instance Papra."
-        429 -> "Trop de requêtes : attendez un instant puis réessayez."
-        in 500..599 -> "Erreur interne du serveur Papra."
-        else -> "Échec de l'envoi (HTTP $code)."
+    /** Catégorie d'erreur à partir du code HTTP (cartographiée vers une ressource côté UI). */
+    private fun errorKind(code: Int): PapraErrorKind = when (code) {
+        400 -> PapraErrorKind.BAD_REQUEST
+        401 -> PapraErrorKind.UNAUTHORIZED
+        403 -> PapraErrorKind.FORBIDDEN
+        404 -> PapraErrorKind.NOT_FOUND
+        409 -> PapraErrorKind.DUPLICATE
+        413 -> PapraErrorKind.TOO_LARGE
+        429 -> PapraErrorKind.RATE_LIMITED
+        in 500..599 -> PapraErrorKind.SERVER_ERROR
+        else -> PapraErrorKind.HTTP
     }
 
-    /** Détails bruts utiles au bouton « Détails ». */
-    private fun fullError(prefix: String?, status: String?, body: String): String {
+    /** Détails bruts utiles au bouton « Détails » (non localisés). */
+    private fun fullError(code: Int, status: String, body: String): String {
         val parts = mutableListOf<String>()
-        prefix?.let { parts += it }
-        status?.let { if (it.isNotBlank()) parts += it }
+        if (code > 0) parts += "HTTP $code"
+        if (status.isNotBlank()) parts += status
         val trimmed = body.trim()
         if (trimmed.isNotBlank()) parts += trimmed.take(500)
         return parts.joinToString(" — ")

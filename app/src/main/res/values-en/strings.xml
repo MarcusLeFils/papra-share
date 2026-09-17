@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Papra Share</string>
+
+    <string name="settings_title">Papra Settings</string>
+    <string name="settings_instance_url_label">Instance URL</string>
+    <string name="settings_instance_url_hint">https://api.papra.app</string>
+    <string name="settings_api_key_label">API key</string>
+    <string name="settings_org_id_label">Organization ID</string>
+    <string name="settings_org_id_hint">ID of the destination organization</string>
+    <string name="settings_save">Save</string>
+    <string name="settings_saved">Configuration saved.</string>
+    <string name="settings_permission_hint">Your API key must have the documents:create permission.</string>
+    <string name="settings_done">Done</string>
+
+    <string name="share_title">Send to Papra</string>
+    <string name="share_uploading">Uploading…</string>
+    <string name="share_not_configured">Papra is not configured. Open the app to set your instance URL, API key and organization ID.</string>
+    <string name="share_not_configured_action">Open settings</string>
+    <string name="share_close">Close</string>
+    <string name="share_show_details">Details</string>
+    <string name="share_hide_details">Hide details</string>
+
+    <string name="share_error_no_documents">No document to send.</string>
+    <string name="share_error_open_file">Could not open “%1$s”.</string>
+    <string name="share_error_upload_failed">Upload failed.</string>
+    <string name="share_error_partial_upload">%1$d out of %2$d document(s) sent.</string>
+
+    <plurals name="share_success">
+        <item quantity="one">%1$d document sent to Papra.</item>
+        <item quantity="other">%1$d documents sent to Papra.</item>
+    </plurals>
+
+    <string name="error_network">Could not reach the Papra instance.</string>
+    <string name="error_invalid_response">The server did not return a document identifier.</string>
+    <string name="error_bad_request">Invalid request sent to the server.</string>
+    <string name="error_unauthorized">Authentication refused: check your API key.</string>
+    <string name="error_forbidden">Access denied: the API key must have the documents:create permission.</string>
+    <string name="error_not_found">Resource not found: check the instance URL and organization ID.</string>
+    <string name="error_duplicate">Duplicate document: an identical document already exists.</string>
+    <string name="error_too_large">File too large for the Papra instance.</string>
+    <string name="error_rate_limited">Too many requests: wait a moment and try again.</string>
+    <string name="error_server">Papra internal server error.</string>
+    <string name="error_http">Upload failed — server error.</string>
+</resources>

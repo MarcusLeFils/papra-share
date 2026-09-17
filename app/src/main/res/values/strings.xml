@@ -15,9 +15,31 @@
 
     <string name="share_title">Envoyer vers Papra</string>
     <string name="share_uploading">Envoi en cours…</string>
-    <string name="share_not_configured">Papra n\u2019est pas configuré.</string>
+    <string name="share_not_configured">Papra n\u2019est pas configuré. Ouvrez l\u2019application pour renseigner l\u2019URL, la clé API et l\u2019ID d\u2019organisation.</string>
     <string name="share_not_configured_action">Ouvrir les réglages</string>
     <string name="share_close">Fermer</string>
     <string name="share_show_details">Détails</string>
     <string name="share_hide_details">Masquer les détails</string>
+
+    <string name="share_error_no_documents">Aucun document à envoyer.</string>
+    <string name="share_error_open_file">Impossible d\u2019ouvrir « %1$s ».</string>
+    <string name="share_error_upload_failed">Échec de l\u2019envoi.</string>
+    <string name="share_error_partial_upload">%1$d sur %2$d document(s) envoyé(s).</string>
+
+    <plurals name="share_success">
+        <item quantity="one">%1$d document envoyé sur Papra.</item>
+        <item quantity="other">%1$d documents envoyés sur Papra.</item>
+    </plurals>
+
+    <string name="error_network">Impossible de joindre l\u2019instance Papra.</string>
+    <string name="error_invalid_response">Le serveur n\u2019a pas renvoyé d\u2019identifiant de document.</string>
+    <string name="error_bad_request">Requête invalide envoyée au serveur.</string>
+    <string name="error_unauthorized">Authentification refusée : vérifiez la clé API.</string>
+    <string name="error_forbidden">Accès refusé : la clé API doit avoir la permission documents:create.</string>
+    <string name="error_not_found">Ressource introuvable : vérifiez l\u2019URL de l\u2019instance et l\u2019ID d\u2019organisation.</string>
+    <string name="error_duplicate">Document en double : un document identique existe déjà.</string>
+    <string name="error_too_large">Fichier trop volumineux pour l\u2019instance Papra.</string>
+    <string name="error_rate_limited">Trop de requêtes : attendez un instant puis réessayez.</string>
+    <string name="error_server">Erreur interne du serveur Papra.</string>
+    <string name="error_http">Échec de l\u2019envoi — erreur du serveur.</string>
 </resources>

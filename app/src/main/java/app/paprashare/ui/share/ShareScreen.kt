@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -83,6 +84,7 @@ fun ShareScreen(
                     }
 
                     is ShareUiState.Success -> {
+                        val success = state as ShareUiState.Success
                         Icon(
                             Icons.Default.CheckCircle,
                             contentDescription = null,
@@ -91,7 +93,7 @@ fun ShareScreen(
                         )
                         Spacer(Modifier.height(12.dp))
                         Text(
-                            text = (state as ShareUiState.Success).message,
+                            text = pluralStringResource(R.plurals.share_success, success.count, success.count),
                             style = MaterialTheme.typography.titleMedium,
                         )
                         Spacer(Modifier.height(16.dp))
@@ -110,7 +112,7 @@ fun ShareScreen(
                         )
                         Spacer(Modifier.height(12.dp))
                         Text(
-                            text = error.message,
+                            text = stringResource(error.messageRes, *error.messageArgs.toTypedArray()),
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.verticalScroll(rememberScrollState()),
                         )

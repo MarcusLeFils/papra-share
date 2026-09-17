@@ -3,8 +3,9 @@ package app.paprashare.ui.share
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import app.paprashare.R
 import app.paprashare.data.PapraApi
-import app.paprashare.data.PapraSettings
+import app.paprashare.data.PapraErrorKind
 import app.paprashare.data.SettingsRepository
 import app.paprashare.data.UploadResult
 import app.paprashare.util.SharedDocument
@@ -13,14 +14,21 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-/** État de l'écran de partage. */
+/**
+ * État de l'écran de partage.
+ *
+ * Tous les messages sont portés par un identifiant de ressource (`@StringRes`) et
+ * d'éventuels arguments, résolus côté UI via `stringResource` — jamais de texte
+ * en dur, pour permettre la localisation.
+ */
 sealed class ShareUiState {
     object Loading : ShareUiState()
     data class Ready(val isConfigured: Boolean) : ShareUiState()
     data class Uploading(val count: Int) : ShareUiState()
-    data class Success(val message: String) : ShareUiState()
+    data class Success(val count: Int) : ShareUiState()
     data class Error(
-        val message: String,
+        val messageRes: Int,
+        val messageArgs: List<Any> = emptyList(),
         val details: String? = null,
     ) : ShareUiState()
 }
@@ -62,13 +70,11 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
         val toSend = _documents
 
         if (toSend.isEmpty()) {
-            _state.value = ShareUiState.Error("Aucun document à envoyer.")
+            _state.value = ShareUiState.Error(R.string.share_error_no_documents)
             return
         }
         if (!_configured) {
-            _state.value = ShareUiState.Error(
-                "Papra n'est pas configuré. Ouvrez l'application pour renseigner l'URL, la clé API et l'ID d'organisation.",
-            )
+            _state.value = ShareUiState.Error(R.string.share_not_configured)
             return
         }
 
@@ -86,7 +92,10 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
                 }.getOrNull()
 
                 if (stream == null) {
-                    UploadResult.Failure("Impossible d'ouvrir ${doc.displayName}")
+                    UploadResult.Failure(
+                        kind = PapraErrorKind.OPEN_FILE,
+                        details = doc.displayName,
+                    )
                 } else {
                     api.uploadDocument(
                         settings = settings,
@@ -100,21 +109,55 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
             val successes = results.count { it is UploadResult.Success }
             val firstFailure = results.firstOrNull { it is UploadResult.Failure }
                 as? UploadResult.Failure
-
             val total = toSend.size
+
             if (successes == total) {
-                _state.value = ShareUiState.Success(
-                    if (total == 1) "Document envoyé sur Papra."
-                    else "Documents envoyés : $total."
-                )
+                _state.value = ShareUiState.Success(total)
             } else {
-                val partial = if (successes > 0) " ($successes/$total envoyés)" else ""
-                val base = firstFailure?.message ?: "Échec de l'envoi."
+                val (res, args) = firstFailure?.let { messageResOf(it, successes, total) }
+                    ?: (R.string.share_error_upload_failed to emptyList<Any>())
                 _state.value = ShareUiState.Error(
-                    message = base + partial,
+                    messageRes = res,
+                    messageArgs = args,
                     details = firstFailure?.details,
                 )
             }
         }
+    }
+
+    /** Résout la clé de ressource + arguments d'un échec. */
+    private fun messageResOf(
+        failure: UploadResult.Failure,
+        successes: Int,
+        total: Int,
+    ): Pair<Int, List<Any>> {
+        val res = when (failure.kind) {
+            PapraErrorKind.NETWORK -> R.string.error_network
+            PapraErrorKind.INVALID_RESPONSE -> R.string.error_invalid_response
+            PapraErrorKind.BAD_REQUEST -> R.string.error_bad_request
+            PapraErrorKind.UNAUTHORIZED -> R.string.error_unauthorized
+            PapraErrorKind.FORBIDDEN -> R.string.error_forbidden
+            PapraErrorKind.NOT_FOUND -> R.string.error_not_found
+            PapraErrorKind.DUPLICATE -> R.string.error_duplicate
+            PapraErrorKind.TOO_LARGE -> R.string.error_too_large
+            PapraErrorKind.RATE_LIMITED -> R.string.error_rate_limited
+            PapraErrorKind.SERVER_ERROR -> R.string.error_server
+            PapraErrorKind.HTTP -> R.string.error_http
+            PapraErrorKind.OPEN_FILE -> R.string.share_error_open_file
+        }
+
+        // Le nom du fichier illisible est le seul argument nécessaire.
+        val args = if (failure.kind == PapraErrorKind.OPEN_FILE) {
+            listOf(failure.details.orEmpty())
+        } else {
+            emptyList<Any>()
+        }
+
+        // Suffixe de progression partielle (ex. « (2/3 envoyés) ») quand certains uploads
+        // ont réussi mais pas tous. Cet état est encodé par une ressource dédiée.
+        if (successes in 1 until total) {
+            return Pair(R.string.share_error_partial_upload, listOf(successes, total))
+        }
+        return Pair(res, args)
     }
 }
