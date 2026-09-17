@@ -1,3 +1,7 @@
+import java.io.File
+import java.nio.charset.StandardCharsets
+import java.util.HashMap
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -20,16 +24,15 @@ android {
     }
 
     signingConfigs {
-        // Keystore de signature (auto-signée) pour la distribution sideload.
-        // Les chemins/mots de passe viennent des variables d'environnement avec
-        // des valeurs locales de secours. La keystore vit hors git (.signing/).
+        // Keystore de signature auto-signée pour la distribution sideload.
+        // Les secrets (alias, chemin, mot de passe) viennent de l'environnement
+        // ou de .signing/keystore.env (gitignoré) — AUCUN mot de passe en dur.
+        // Voir le helper signingSecret() en bas de fichier.
         create("release") {
-            keyAlias = System.getenv("PAPRA_KEY_ALIAS") ?: "papra"
-            keyPassword = System.getenv("PAPRA_KEY_PASSWORD") ?: "papra-share-signing-2026"
-            storeFile = file(
-                System.getenv("PAPRA_KEYSTORE") ?: "${projectDir}/../.signing/papra-share-release.jks",
-            )
-            storePassword = System.getenv("PAPRA_KEYSTORE_PASSWORD") ?: "papra-share-signing-2026"
+            keyAlias = signingSecret("PAPRA_KEY_ALIAS")
+            keyPassword = signingSecret("PAPRA_KEY_PASSWORD")
+            storeFile = file(signingSecret("PAPRA_KEYSTORE"))
+            storePassword = signingSecret("PAPRA_KEYSTORE_PASSWORD")
         }
     }
 
@@ -69,4 +72,40 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     debugImplementation(libs.androidx.ui.tooling)
+}
+
+// ─── Secrets de signature ────────────────────────────────────────────────────
+// Résout une variable de signature en préférant l'environnement, puis un
+// fichier .signing/keystore.env (gitignoré). Refuse le build si le secret
+// manque — pas de mot de passe de secours ni de valeur codée en dur.
+private fun signingSecret(name: String): String {
+    val fromEnv = System.getenv(name)
+    if (fromEnv != null && !fromEnv.isEmpty()) return fromEnv
+
+    val fromFile = loadSigningEnvFile().get(name)
+    if (fromFile != null && !fromFile.isEmpty()) return fromFile
+
+    throw GradleException(
+        "Signing secret '$name' is not set. Copy .signing/keystore.env.example to " +
+            ".signing/keystore.env (or export the PAPRA_* variables) before building release.",
+    )
+}
+
+// Lit .signing/keystore.env : lignes KEY=VALUE, ignore les lignes vides/#.
+private fun loadSigningEnvFile(): Map<String, String> {
+    val map = HashMap<String, String>()
+    val envFile = File("${projectDir}/../.signing/keystore.env")
+    if (envFile.isFile() && envFile.length() > 0) {
+        val content = String(envFile.readBytes(), StandardCharsets.UTF_8)
+        content.split("\n").forEach { raw ->
+            val line = raw.trim()
+            if (!line.isEmpty() && !line.startsWith("#")) {
+                val idx = line.indexOf('=')
+                if (idx > 0) {
+                    map.put(line.substring(0, idx).trim(), line.substring(idx + 1).trim())
+                }
+            }
+        }
+    }
+    return map
 }
