@@ -17,6 +17,8 @@ et le projet adhère à la [Semantic Versioning](https://semver.org/).
 
 - Add project README (usage, config, dev environment)
 
+- Add GenAI notice section to README
+
 
 ### Fonctionnalités
 

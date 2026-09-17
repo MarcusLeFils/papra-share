@@ -1,6 +1,6 @@
 # Papra Share
 
-**Android application** built with **Jetpack Compose** that adds a system share target for documents and scans (PDF, ODT, DOC/DOCX, ODS, XLS/XLSX, PPT/PPTX, RTF, TXT, CSV, PNG, JPG, WEBP, HEIC, HEIF) and uploads them straight to your **Papra** instance.
+**Android application** built with **Jetpack Compose** that adds a system share target for documents and scans (PDF, ODT, DOC/DOCX, ODS, XLS/XLSX, PPT/PPTX, RTF, TXT, CSV, PNG, JPG, WEBP, HEIC, HEIF) and uploads them straight to your [Papra](https://papra.app) instance.
 
 ## How it works
 
@@ -81,3 +81,9 @@ papra-share/
 ## Security note
 
 The API key is stored locally in the app preferences and sent in the `Authorization` header. Prefer a TLS (HTTPS) endpoint on your self-hosted install, and scope the key to the `documents:create` permission only where possible, to limit the impact of an eventual leak.
+
+## GenAI notice
+
+This project is GenAI generated and maintained. [I](https://github.com/GaspardCulis) needed this app to simplify the upload process of documents on my phone to my Papra instance.
+I couldn't bother making it myself, and saw the opportunity to do a little AI experiment, letting my _agent_ (I get cringed by this word) have it's own little project.
+Usually not a fan of vibe coded projects, but it's a stoopidly simple app and it will let me see if Mr Marcus is capable of developing and maintaining this helpful little app and be of some use.
