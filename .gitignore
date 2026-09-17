@@ -1,0 +1,26 @@
+# Gradle
+.gradle/
+/build/
+app/build/
+
+# IntelliJ / JetBrains
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Nix
+/result
+.direnv/
+
+# Kotlin / compile
+*.class
+*.log
+
+# Android
+*.apk
+*.apk.idsig
+!app/build/outputs/apk/debug/app-debug.apk
+
+# Divers
+.DS_Store
