@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.paprashare.R
+import app.paprashare.domain.PapraErrorKind
 import app.paprashare.ui.theme.PapraTheme
 import app.paprashare.util.SharedDocument
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -104,6 +105,7 @@ fun ShareScreen(
 
                     is ShareUiState.Error -> {
                         val error = state as ShareUiState.Error
+                        val (messageRes, messageArgs) = errorMessage(error)
                         Icon(
                             Icons.Default.ErrorOutline,
                             contentDescription = null,
@@ -112,10 +114,21 @@ fun ShareScreen(
                         )
                         Spacer(Modifier.height(12.dp))
                         Text(
-                            text = stringResource(error.messageRes, *error.messageArgs.toTypedArray()),
+                            text = stringResource(messageRes, *messageArgs.toTypedArray()),
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.verticalScroll(rememberScrollState()),
                         )
+                        // Progression partielle : une ligne secondaire sous la cause.
+                        if (error.failures in 1 until error.total) {
+                            Text(
+                                text = stringResource(
+                                    R.string.share_error_partial_upload,
+                                    error.failures,
+                                    error.total,
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
                         if (!error.details.isNullOrEmpty()) {
                             Spacer(Modifier.height(8.dp))
                             TextButton(
@@ -207,4 +220,32 @@ private fun Header(documents: List<SharedDocument>) {
             }
         }
     }
+}
+
+/**
+ * Résout, côté UI (unique propriétaire des `R.string`), la ressource et les
+ * arguments affichés pour un échec. Le ViewModel ne porte que des données pures.
+ */
+private fun errorMessage(error: ShareUiState.Error): Pair<Int, List<Any>> {
+    val res = when (error.kind) {
+        PapraErrorKind.NETWORK -> R.string.error_network
+        PapraErrorKind.INVALID_RESPONSE -> R.string.error_invalid_response
+        PapraErrorKind.BAD_REQUEST -> R.string.error_bad_request
+        PapraErrorKind.UNAUTHORIZED -> R.string.error_unauthorized
+        PapraErrorKind.FORBIDDEN -> R.string.error_forbidden
+        PapraErrorKind.NOT_FOUND -> R.string.error_not_found
+        PapraErrorKind.DUPLICATE -> R.string.error_duplicate
+        PapraErrorKind.TOO_LARGE -> R.string.error_too_large
+        PapraErrorKind.RATE_LIMITED -> R.string.error_rate_limited
+        PapraErrorKind.SERVER_ERROR -> R.string.error_server
+        PapraErrorKind.HTTP -> R.string.error_http
+        PapraErrorKind.OPEN_FILE -> R.string.share_error_open_file
+    }
+    // Le nom du fichier est le seul argument nécessaire, pour le kind OPEN_FILE.
+    val args = if (error.kind == PapraErrorKind.OPEN_FILE && !error.fileName.isNullOrEmpty()) {
+        listOf(error.fileName)
+    } else {
+        emptyList<Any>()
+    }
+    return Pair(res, args)
 }

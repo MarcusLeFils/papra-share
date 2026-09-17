@@ -21,10 +21,8 @@
     <string name="share_show_details">Details</string>
     <string name="share_hide_details">Hide details</string>
 
-    <string name="share_error_no_documents">No document to send.</string>
     <string name="share_error_open_file">Could not open “%1$s”.</string>
-    <string name="share_error_upload_failed">Upload failed.</string>
-    <string name="share_error_partial_upload">%1$d out of %2$d document(s) sent.</string>
+    <string name="share_error_partial_upload">%1$d of %2$d document(s) not sent.</string>
 
     <plurals name="share_success">
         <item quantity="one">%1$d document sent to Papra.</item>

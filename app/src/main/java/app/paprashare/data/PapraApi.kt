@@ -1,5 +1,7 @@
 package app.paprashare.data
 
+import app.paprashare.domain.PapraErrorKind
+import app.paprashare.domain.UploadResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -11,34 +13,6 @@ import okhttp3.RequestBody
 import okio.BufferedSink
 import java.io.InputStream
 import java.util.concurrent.TimeUnit
-
-/**
- * Catégorie d'un échec d'upload, indépendante de la locale.
- * La couche UI la mappe vers une ressource de chaîne (`R.string`).
- */
-enum class PapraErrorKind {
-    NETWORK,
-    INVALID_RESPONSE,
-    BAD_REQUEST,
-    UNAUTHORIZED,
-    FORBIDDEN,
-    NOT_FOUND,
-    DUPLICATE,
-    TOO_LARGE,
-    RATE_LIMITED,
-    SERVER_ERROR,
-    HTTP,
-    OPEN_FILE,
-}
-
-/** Résultat d'un upload. */
-sealed class UploadResult {
-    data class Success(val documentId: String) : UploadResult()
-    data class Failure(
-        val kind: PapraErrorKind,
-        val details: String? = null,
-    ) : UploadResult()
-}
 
 /**
  * Client minimal de l'API Papra.
