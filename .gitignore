@@ -24,3 +24,7 @@ app/build/
 
 # Divers
 .DS_Store
+
+# Signature — keystore privé (secret, jamais publié)
+.signing/
+.env
