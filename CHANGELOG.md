@@ -4,6 +4,17 @@ Toutes les modifications notables de Papra Share sont documentées ici.
 
 Le format est fondé sur [Keep a Changelog](https://keepachangelog.com/),
 et le projet adhère à la [Semantic Versioning](https://semver.org/).
+## [1.1.0] - 2026-09-17
+
+### Corrections de bugs
+
+- **i18n:** Move string mapping to UI, preserve failure cause on partial upload
+
+
+### Fonctionnalités
+
+- Internationalize the app (resource-based messages + English locale)
+
 ## [1.0.0] - 2026-09-17
 
 ### Build & CI
