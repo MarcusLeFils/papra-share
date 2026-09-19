@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import app.paprashare.domain.normalizeInstanceUrl
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -39,7 +40,7 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun save(settings: PapraSettings) {
         context.dataStore.edit { prefs ->
-            prefs[Keys.INSTANCE_URL] = settings.instanceUrl.trim().trimEnd('/')
+            prefs[Keys.INSTANCE_URL] = normalizeInstanceUrl(settings.instanceUrl)
             prefs[Keys.API_KEY] = settings.apiKey.trim()
             prefs[Keys.ORGANIZATION_ID] = settings.organizationId.trim()
         }
