@@ -25,6 +25,19 @@ jobs:
       # Environnement Nix (déclaratif via flake.nix) : JDK, SDK Android, Gradle.
       - uses: DeterminateSystems/nix-installer-action@v4
 
+      # Le signingConfig exige PAPRA_* à la config même pour test/lint (qui ne
+      # signent pas). On fournit un placeholder inoffensif ici ; seuls le job
+      # release fournit les secrets réels.
+      - name: Provide signing placeholders (no-op for CI/test)
+        run: |
+          mkdir -p .signing
+          cat > .signing/keystore.env <<'EOF'
+          PAPRA_KEY_ALIAS=ci
+          PAPRA_KEYSTORE=/nonexistent/ci.jks
+          PAPRA_KEY_PASSWORD=ci
+          PAPRA_KEYSTORE_PASSWORD=ci
+          EOF
+
       - name: Enter devShell and run unit tests (Nix)
         run: nix develop --command ./gradlew test --no-daemon
 
