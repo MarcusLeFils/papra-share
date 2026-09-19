@@ -72,6 +72,10 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     debugImplementation(libs.androidx.ui.tooling)
+
+    // Tests unitaires JVM (exécutés par `./gradlew test`, sans appareil).
+    testImplementation(kotlin("test"))
+    testImplementation("junit:junit:4.13.2")
 }
 
 // ─── Secrets de signature ────────────────────────────────────────────────────
