@@ -1,6 +1,8 @@
 package app.paprashare.data
 
 import app.paprashare.domain.PapraErrorKind
+import app.paprashare.domain.httpToErrorKind
+import app.paprashare.domain.normalizeInstanceUrl
 import app.paprashare.domain.UploadResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -46,7 +48,7 @@ class PapraApi {
         // La fermeture du flux doit être garantie même si execute() échoue avant
         // l'écriture du body (sinon fuite de descripteur). try/finally englobant.
         try {
-            val base = settings.instanceUrl.trim().trimEnd('/')
+            val base = normalizeInstanceUrl(settings.instanceUrl)
             val url = "$base/api/organizations/${settings.organizationId.trim()}/documents"
 
             val mediaType = mimeType.toMediaTypeOrNull()
@@ -81,7 +83,7 @@ class PapraApi {
                 val body = response.body?.string().orEmpty()
                 if (!response.isSuccessful) {
                     UploadResult.Failure(
-                        kind = errorKind(response.code),
+                        kind = httpToErrorKind(response.code),
                         details = fullError(response.code, response.message, body),
                     )
                 } else {
@@ -111,18 +113,6 @@ class PapraApi {
         }
     }
 
-    /** Catégorie d'erreur à partir du code HTTP (cartographiée vers une ressource côté UI). */
-    private fun errorKind(code: Int): PapraErrorKind = when (code) {
-        400 -> PapraErrorKind.BAD_REQUEST
-        401 -> PapraErrorKind.UNAUTHORIZED
-        403 -> PapraErrorKind.FORBIDDEN
-        404 -> PapraErrorKind.NOT_FOUND
-        409 -> PapraErrorKind.DUPLICATE
-        413 -> PapraErrorKind.TOO_LARGE
-        429 -> PapraErrorKind.RATE_LIMITED
-        in 500..599 -> PapraErrorKind.SERVER_ERROR
-        else -> PapraErrorKind.HTTP
-    }
 
     /** Détails bruts utiles au bouton « Détails » (non localisés). */
     private fun fullError(code: Int, status: String, body: String): String {
