@@ -78,6 +78,21 @@ papra-share/
 | OkHttp | 4.12.0 |
 | Target / compile SDK | 36 · minSdk 24 |
 
+## Installation
+
+Install and auto-update via **[Obtainium](https://obtainium.imranr.dev/)** (Android client for apps distributed as release artifacts):
+
+1. Install [Obtainium](https://obtainium.imranr.dev/).
+2. Open this deep link to add Papra Share (one tap):
+
+   `https://apps.obtainium.imranr.dev/redirect?r=obtainium%3A%2F%2Fapp%2F%257B%2522id%2522%253A%2520%2522https%253A%252F%252Fgithub.com%252FMarcusLeFils%252Fpapra-share%2522%252C%2520%2522url%2522%253A%2520%2522https%253A%252F%252Fgithub.com%252FMarcusLeFils%252Fpapra-share%2522%252C%2520%2522author%2522%253A%2520%2522MarcusLeFils%2522%252C%2520%2522name%2522%253A%2520%2522papra-share%2522%252C%2520%2522preferredApkIndex%2522%253A%25200%252C%2520%2522additionalSettings%2522%253A%2520%2522%257B%257D%2522%252C%2520%2522overrideSource%2522%253A%2520null%257D`
+
+   …or add it manually: **Add App** → paste the repository URL `https://github.com/MarcusLeFils/papra-share` → pick **GitHub** and the latest release. Each release ships a single `papra-share-signed.apk`, so there is nothing else to configure.
+
+3. Obtainium checks GitHub Releases periodically and can install/update in the background.
+
+> **Note:** the APK is signed with a self-signed key (APK Signature Scheme v2). Enable *Settings → Install unknown sources* (or sideload) on your device the first time you install.
+
 ## Security note
 
 The API key is stored locally in the app preferences and sent in the `Authorization` header. Prefer a TLS (HTTPS) endpoint on your self-hosted install, and scope the key to the `documents:create` permission only where possible, to limit the impact of an eventual leak.
