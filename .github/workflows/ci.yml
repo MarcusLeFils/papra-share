@@ -107,8 +107,10 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          # Nom d'asset STABLE (indépendant de la version) : requis par Obtainium
+          # pour filtrer/exécuter un suivi fiable et des mises à jour silencieuses.
           cp app/build/outputs/apk/release/app-release.apk \
-             "/tmp/papra-share-v${VERSION}-signed.apk"
+             /tmp/papra-share-signed.apk
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
@@ -116,6 +118,6 @@ jobs:
           tag_name: "${{ github.ref_name }}"
           name: "${{ github.ref_name }}"
           body_path: /tmp/release-notes.md
-          files: /tmp/papra-share-v${{ steps.meta.outputs.version }}-signed.apk
+          files: /tmp/papra-share-signed.apk
           draft: false
           prerelease: false
