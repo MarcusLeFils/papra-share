@@ -83,6 +83,12 @@ jobs:
           chmod 600 .signing/keystore.env
 
       - name: Build signed release APK
+        env:
+          # Source unique de la version : le tag (ex. v1.2.0 → 1.2.0 injecté).
+          # Gradle lit PAPRA_PACKAGE_VERSION (repli dev "0.0.1" hors release) et
+          # en dérive versionCode/versionName — plus jamais de version en dur,
+          # ce qui évite la boucle de MAJ Obtainium (tag 1.2.0 vs APK restée 1.1.0).
+          PAPRA_PACKAGE_VERSION: "${{ github.ref_name }}"
         run: nix develop --command ./gradlew assembleRelease --no-daemon
 
       - name: Verify signature (apksigner)
