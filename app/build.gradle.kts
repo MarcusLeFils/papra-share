@@ -2,6 +2,8 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.HashMap
 
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -51,11 +53,16 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
     buildFeatures {
         compose = true
+    }
+}
+
+// Kotlin 2.4+ : le bloc `kotlinOptions` est supprimé, remplacé par le DSL
+// `kotlin { compilerOptions { ... } }` (jvmTarget prend un JvmTarget typé, plus un String).
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.fromTarget("17")
     }
 }
 
