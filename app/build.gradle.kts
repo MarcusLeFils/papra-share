@@ -6,7 +6,8 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
+    // Kotlin support is built into AGP 9+; org.jetbrains.kotlin.android is no
+    // longer compatible. kotlin.compose remains for the @Composable DSL.
     alias(libs.plugins.kotlin.compose)
 }
 
