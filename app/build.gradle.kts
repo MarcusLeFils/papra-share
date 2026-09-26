@@ -18,8 +18,22 @@ android {
         applicationId = "app.paprashare"
         minSdk = 24
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1.0"
+        // Version : source unique = tag de release injecté par la CI dans
+        // PAPRA_PACKAGE_VERSION (ex. "1.2.0"). Repli dev "0.0.1" hors release.
+        // On ne code plus la version en dur : c'était la cause du décalage
+        // v1.2.0 → APK encore buildé en 1.1.0 (boucle de MAJ Obtainium).
+        val rawVersion: String? = System.getenv("PAPRA_PACKAGE_VERSION")
+        var v: String = if (rawVersion.isNullOrEmpty()) "0.0.1" else rawVersion.trim()
+        if (v.startsWith("v")) v = v.substring(1)
+        if (v.startsWith("V")) v = v.substring(1)
+        if (v.isEmpty()) v = "0.0.1"
+        val packageVersion: String = v
+        val segs: List<String> = packageVersion.split('.').toList()
+        val seg0: Int = if (segs.size > 0) segs[0].toIntOrNull() ?: 0 else 0
+        val seg1: Int = if (segs.size > 1) segs[1].toIntOrNull() ?: 0 else 0
+        val seg2: Int = if (segs.size > 2) segs[2].toIntOrNull() ?: 0 else 0
+        versionCode = seg0 * 10000 + seg1 * 100 + seg2
+        versionName = packageVersion
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
