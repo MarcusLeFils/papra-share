@@ -36,6 +36,7 @@
               gradle
               android-tools
               androidSdk.androidsdk
+              git-cliff   # épinglé par flake.lock → version identique CI/local
             ];
 
             # Gradle a besoin de localiser le SDK et un JDK 17.

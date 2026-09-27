@@ -104,9 +104,17 @@ jobs:
             fi
           '
 
-      - name: Generate changelog (git-cliff, config par défaut)
+      - name: Generate changelog (git-cliff)
         run: |
-          nix run nixpkgs#git-cliff -- --latest > /tmp/release-notes.md
+          # git-cliff provient du devShell (flake), donc version ÉPINGLÉE par
+          # flake.lock → identique CI/local (pas de `nix run nixpkgs#git-cliff`, non
+          # épinglé : 2.13 local vs 2.14 CI). On passe la plage de tags explicite
+          # (prevTag..currentTag) : `--latest`/`--current` sont volatils entre
+          # versions et produisaient un corps de release vide.
+          PREV_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]' \
+                      | awk -v cur="$GITHUB_REF_NAME" '$0!=cur{print; exit}')
+          nix develop --command git-cliff -- "${PREV_TAG}..${GITHUB_REF_NAME}" \
+            > /tmp/release-notes.md
 
       - name: Tag name and artifacts
         id: meta
