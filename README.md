@@ -102,3 +102,5 @@ The API key is stored locally in the app preferences and sent in the `Authorizat
 This project is GenAI generated and maintained. [I](https://github.com/GaspardCulis) needed this app to simplify the upload process of documents on my phone to my Papra instance.
 I couldn't bother making it myself, and saw the opportunity to do a little AI experiment, letting my _agent_ (I get cringed by this word) have it's own little project.
 Usually not a fan of vibe coded projects, but it's a stoopidly simple app and it will let me see if Mr Marcus is capable of developing and maintaining this helpful little app and be of some use.
+
+<img src="https://0rwx.com/static/AI-X.png" alt="AI:X" height="72">
