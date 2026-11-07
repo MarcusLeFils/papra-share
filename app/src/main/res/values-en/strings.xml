@@ -10,7 +10,7 @@
     <string name="settings_org_id_hint">ID of the destination organization</string>
     <string name="settings_save">Save</string>
     <string name="settings_saved">Configuration saved.</string>
-    <string name="settings_permission_hint">Your API key must have the documents:create permission.</string>
+    <string name="settings_permission_hint">Your API key needs documents:create; add organizations:read to pick the organization when sharing.</string>
     <string name="settings_done">Done</string>
 
     <string name="share_title">Send to Papra</string>

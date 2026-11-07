@@ -10,8 +10,9 @@
 
 - The app declares a **share activity** (`ShareActivity`) that catches `ACTION_SEND` / `ACTION_SEND_MULTIPLE` from the system, filtered on document/scan MIME types.
 - From any file manager, pick **Share** → **Papra Share**; a Compose (material3) screen appears and the document(s) are uploaded.
-- It calls `POST {instanceUrl}/api/organizations/{orgId}/documents` as multipart form-data (`file` field) with an `Authorization: Bearer <apiKey>` header.
-- Required API key permission: **`documents:create`** (create it in your Papra user settings) — plus `organizations:read` if you want to list organizations.
+- It calls `POST {instanceUrl}/api/organizations/{orgId}/documents` as multipart form-data (`file` field) with an `Authorization: Bearer <apiKey> header.
+- The share screen lets you **pick the destination organization** (a dropdown listing your organizations by name) before sending. The last used organization is remembered and the list is cached in the app, so the picker still works offline.
+- Required API key permission: **`documents:create`** (create it in your Papra user settings). Add **`organizations:read`** to enable the organization picker — without it, the document is sent to the organization ID configured in settings.
 
 ### Configuration
 
@@ -21,7 +22,7 @@ Three fields, reachable from the launcher (tap **Papra Share** → *Papra Settin
 |---|---|
 | Instance URL | `https://api.papra.app` (or your self-hosted install, e.g. `https://papra.example.net`) |
 | API key | token created under *User Settings → API keys* |
-| Organization ID | ID of the destination organization |
+| Organization ID | ID of the destination organization (default; the share screen lets you pick per share) |
 
 Settings are persisted with `androidx.datastore:datastore-preferences`.
 
@@ -80,6 +81,7 @@ papra-share/
 | Compose BOM | 2025.12.01 (material3, foundation, icons) |
 | DataStore preferences | 1.1.7 |
 | OkHttp | 4.12.0 |
+| kotlinx.serialization-json | 1.11.0 (JSON parsing) |
 | Target / compile SDK | 36 · minSdk 24 |
 
 ## Installation
