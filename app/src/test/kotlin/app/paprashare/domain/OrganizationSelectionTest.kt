@@ -30,18 +30,40 @@ class OrganizationSelectionTest {
     }
 
     @Test
-    fun firstOfList_whenNeitherSavedNorLastPresent() {
+    fun savedId_isPreserved_evenWhenAbsentFromList() {
+        // La cible configurée (v1.x) ne doit pas être remplacée en silence par
+        // la première organisation listée — même si elle n'apparaît pas dans la liste.
         assertEquals(
-            "org-a",
-            defaultOrganizationId(listOf("org-a", "org-b"), savedId = "zzz", lastUsedId = "yyy"),
+            "cfg",
+            defaultOrganizationId(listOf("org-a", "org-b"), savedId = "cfg", lastUsedId = "zzz"),
+        )
+        assertEquals(
+            "cfg",
+            defaultOrganizationId(listOf("org-a", "org-b"), savedId = "cfg", lastUsedId = null),
         )
     }
 
     @Test
-    fun null_whenEmptyList() {
+    fun firstOfList_whenNoConfiguredId() {
+        assertEquals(
+            "org-a",
+            defaultOrganizationId(listOf("org-a", "org-b"), savedId = "", lastUsedId = null),
+        )
+    }
+
+    @Test
+    fun blankLastUsedId_isIgnored() {
+        assertEquals(
+            "org-a",
+            defaultOrganizationId(listOf("org-a", "org-b"), savedId = "org-a", lastUsedId = ""),
+        )
+    }
+
+    @Test
+    fun null_whenNoConfiguredIdAndEmptyList() {
         assertEquals(
             null,
-            defaultOrganizationId(emptyList(), savedId = "org-a", lastUsedId = "org-b"),
+            defaultOrganizationId(emptyList(), savedId = "", lastUsedId = "org-b"),
         )
     }
 }

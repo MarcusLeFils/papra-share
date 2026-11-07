@@ -82,7 +82,6 @@ fun ShareScreen(
                             isConfigured = ready.isConfigured,
                             organizations = organizations,
                             selectedOrganizationId = selectedOrgId,
-                            organizationsUnavailable = ready.organizationsUnavailable,
                             onSelectOrganization = { viewModel.selectOrganization(it) },
                             onOpenSettings = onOpenSettings,
                         )
@@ -191,7 +190,6 @@ private fun ShareContent(
     isConfigured: Boolean,
     organizations: List<Organization>,
     selectedOrganizationId: String,
-    organizationsUnavailable: Boolean,
     onSelectOrganization: (String) -> Unit,
     onOpenSettings: () -> Unit,
 ) {
@@ -205,7 +203,7 @@ private fun ShareContent(
                 onSelect = onSelectOrganization,
             )
             Spacer(Modifier.height(12.dp))
-        } else if (organizationsUnavailable) {
+        } else {
             Text(
                 text = stringResource(R.string.share_orgs_unavailable),
                 style = MaterialTheme.typography.bodySmall,

@@ -94,7 +94,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.okhttp)
     implementation(libs.kotlinx.coroutines.android)
-    // JSON parsing standard (kotlinx.serialization) pour la réponse GET /api/organizations.
+    // Standard JSON parsing (kotlinx.serialization) for the GET /api/organizations response.
     implementation(libs.kotlinx.serialization.json)
 
     debugImplementation(libs.androidx.ui.tooling)
