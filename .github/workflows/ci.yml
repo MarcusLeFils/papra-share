@@ -134,4 +134,8 @@ jobs:
           body_path: /tmp/release-notes.md
           files: /tmp/papra-share-signed.apk
           draft: false
-          prerelease: false
+          # Pré-release si le tag porte un identifiant de pré-version (ex. v2.0.0-rc1).
+          # GitHub la marque « Pré-version » → le suivi Obtainium *stable* l'ignore,
+          # donc aucune mise à jour automatique pour les autres utilisateurs ; elle
+          # reste installable à la main (ou avec les pré-releases activées) pour tester.
+          prerelease: ${{ contains(github.ref_name, '-') }}
