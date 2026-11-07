@@ -7,8 +7,10 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.android.application)
     // Kotlin support is built into AGP 9+; org.jetbrains.kotlin.android is no
-    // longer compatible. kotlin.compose remains for the @Composable DSL.
+    // longer compatible. kotlin.compose remains for the @Composable DSL; the
+    // kotlin.serialization plugin brings the kotlinx-serialization compiler plugin.
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -92,6 +94,8 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.okhttp)
     implementation(libs.kotlinx.coroutines.android)
+    // JSON parsing standard (kotlinx.serialization) pour la réponse GET /api/organizations.
+    implementation(libs.kotlinx.serialization.json)
 
     debugImplementation(libs.androidx.ui.tooling)
 
