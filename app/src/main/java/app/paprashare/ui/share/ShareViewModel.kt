@@ -6,8 +6,13 @@ import androidx.lifecycle.viewModelScope
 import app.paprashare.data.PapraApi
 import app.paprashare.data.SettingsRepository
 import app.paprashare.domain.PapraErrorKind
+import app.paprashare.domain.Organization
 import app.paprashare.domain.UploadResult
+import app.paprashare.domain.defaultOrganizationId
+import app.paprashare.domain.parseOrganizations
+import app.paprashare.domain.serializeOrganizations
 import app.paprashare.util.SharedDocument
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -22,7 +27,18 @@ import kotlinx.coroutines.launch
  */
 sealed class ShareUiState {
     object Loading : ShareUiState()
-    data class Ready(val isConfigured: Boolean) : ShareUiState()
+
+    /**
+     * Prêt à envoyer.
+     * @param isConfigured  réglages complets (URL + clé + organisation sauvegardée)
+     * @param organizationsUnavailable  la liste des organisations n'a pas pu être
+     *   obtenue (réseau, permission `organizations:read` absente) et aucune liste
+     *   n'était en cache → pas de sélecteur, repli sur l'organisation sauvegardée.
+     */
+    data class Ready(
+        val isConfigured: Boolean,
+        val organizationsUnavailable: Boolean = false,
+    ) : ShareUiState()
     object Uploading : ShareUiState()
     data class Success(val count: Int) : ShareUiState()
 
@@ -58,6 +74,14 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
     /** Statut de configuration, recalculé à chaque init (lecture synchrone). */
     private var _configured = false
 
+    /** Organisations disponibles (obtenues du réseau ou du cache). */
+    private val _organizations = MutableStateFlow<List<Organization>>(emptyList())
+    val organizations: StateFlow<List<Organization>> = _organizations
+
+    /** Organisation sélectionnée pour le partage en cours — source de vérité de la cible. */
+    private val _selectedOrganizationId = MutableStateFlow("")
+    val selectedOrganizationId: StateFlow<String> = _selectedOrganizationId
+
     /**
      * Remplace la liste de documents. Appelé à la création et à chaque nouvelle
      * intention de partage : idempotent, et remplace TOUJOURS la liste courante
@@ -70,8 +94,42 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val settings = settingsRepository.settings.first()
             _configured = settings.isConfigured
-            _state.value = ShareUiState.Ready(_configured)
+
+            // Cache d'abord (fonctionnement hors-ligne), puis rafraîchissement
+            // réseau best-effort : le partage ne doit JAMAIS attendre la liste.
+            var organizations = parseOrganizations(settingsRepository.organizationsCache.first())
+            var orgListFailed = false
+            if (_configured) {
+                try {
+                    val fresh = api.getOrganizations(settings)
+                    if (fresh.isNotEmpty()) {
+                        organizations = fresh
+                        settingsRepository.setOrganizationsCache(serializeOrganizations(fresh))
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    orgListFailed = true
+                }
+            }
+            _organizations.value = organizations
+
+            val selectedId = defaultOrganizationId(
+                cachedIds = organizations.map { it.id },
+                savedId = settings.organizationId,
+                lastUsedId = settingsRepository.lastOrganizationId.first().takeIf { it.isNotBlank() },
+            ) ?: settings.organizationId
+            _selectedOrganizationId.value = selectedId
+
+            val unavailable = organizations.isEmpty() && orgListFailed
+            _state.value = ShareUiState.Ready(_configured, unavailable)
         }
+    }
+
+    /** L'utilisateur choisit l'organisation cible du partage en cours. */
+    fun selectOrganization(id: String) {
+        _selectedOrganizationId.value = id
+        viewModelScope.launch { settingsRepository.setLastOrganizationId(id) }
     }
 
     /**
@@ -92,6 +150,11 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
             val settings = settingsRepository.settings.first()
             val context = getApplication<Application>()
 
+            // La cible est le choix du moment (sélecteur) ; à défaut, ID sauvegardé.
+            val orgId = _selectedOrganizationId.value.ifBlank { settings.organizationId }
+            val settingsForUpload = settings.copy(organizationId = orgId)
+            settingsRepository.setLastOrganizationId(orgId)
+
             // Upload séquentiel : chaque échec est annoté du nom du document fautif.
             val results = toSend.map { doc ->
                 val stream = runCatching {
@@ -102,7 +165,7 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
                     UploadResult.Failure(kind = PapraErrorKind.OPEN_FILE)
                 } else {
                     api.uploadDocument(
-                        settings = settings,
+                        settings = settingsForUpload,
                         fileName = doc.displayName,
                         mimeType = doc.mimeType,
                         data = stream,
