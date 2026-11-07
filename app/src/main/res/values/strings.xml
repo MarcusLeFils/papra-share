@@ -21,6 +21,9 @@
     <string name="share_show_details">Détails</string>
     <string name="share_hide_details">Masquer les détails</string>
 
+    <string name="share_org_label">Organisation de destination</string>
+    <string name="share_orgs_unavailable">Choix de l\u2019organisation indisponible : envoi vers l\u2019organisation configurée.</string>
+
     <string name="share_error_open_file">Impossible d\u2019ouvrir « %1$s ».</string>
     <string name="share_error_partial_upload">%1$d document(s) sur %2$d non envoyé(s).</string>
 
