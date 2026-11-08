@@ -55,6 +55,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          # git-cliff construit les notes de release sur une plage de tags
+          # (prevTag..currentTag) : récupérer tout l'historique ET tous les tags,
+          # sinon un clone superficiel ne voit que le tag courant, PREV_TAG reste
+          # vide et la release est publiée avec un corps vide.
+          fetch-depth: 0
+          fetch-tags: true
 
       - uses: DeterminateSystems/nix-installer-action@v23
 
