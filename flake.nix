@@ -17,9 +17,9 @@
             config.android_sdk.accept_license = true;
           };
 
-          # SDK Android minimal pour Compose : plateforme 36 + build-tools 35 (minimum AGP) et 36.
+          # SDK Android minimal pour Compose : plateforme 37 (compileSdk) + build-tools 36 (minimum AGP) et 35.
           androidSdk = pkgs.androidenv.composeAndroidPackages {
-            platformVersions = [ "36" ];
+            platformVersions = [ "37" ];
             buildToolsVersions = [ "36.0.0" "35.0.0" ];
             includeEmulator = false;
             includeNDK = false;
@@ -51,7 +51,7 @@
               echo "  JDK :    $JAVA_HOME"
               echo "  SDK :    $ANDROID_HOME"
               echo "  Gradle : $(gradle --version | grep Gradle)"
-              echo "  CompileSdk 36 — build-tools 36.0.0"
+              echo "  CompileSdk 37 — build-tools 36.0.0"
               echo "════════════════════════════════════════════════"
               echo ""
               echo "  Build :  gradle assembleDebug"
