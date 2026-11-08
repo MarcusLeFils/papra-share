@@ -1,3 +1,15 @@
+## [2.0.0] - 2026-11-07
+
+### 🚀 Features
+
+- Pick the destination organization at share time (dropdown listing your organizations; falls back to the saved organization when the list is unavailable)
+- Remember the last-used organization and cache the list so the picker works offline
+- Parse the organizations listing with `kotlinx.serialization-json` (replaces regex parsing)
+
+### 📚 Documentation
+
+- Document the `organizations:read` permission and the per-share organization picker
+
 ## [1.3.0] - 2026-09-26
 
 ### 🚀 Features

@@ -1,8 +1,10 @@
 package app.paprashare.data
 
 import app.paprashare.domain.PapraErrorKind
+import app.paprashare.domain.Organization
 import app.paprashare.domain.httpToErrorKind
 import app.paprashare.domain.normalizeInstanceUrl
+import app.paprashare.domain.parseOrganizations
 import app.paprashare.domain.UploadResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -114,6 +116,36 @@ class PapraApi {
     }
 
 
+    /**
+     * Énumère les organisations accessibles avec la clé configurée.
+     *
+     * GET {instanceUrl}/api/organizations — permission `organizations:read`.
+     * Contrairement à [uploadDocument], cette requête est *facultative* pour le
+     * flux de partage : l'appelant gère l'échec comme un repli (liste ignorée,
+     * envoi vers l'organisation sauvegardée). Toute non-2xx lève donc
+     * [PapraApiException] pour signaler le refus sans le transformer en échec
+     * de l'envoi lui-même.
+     *
+     * @throws PapraApiException si le serveur répond autre chose que 2xx.
+     */
+    suspend fun getOrganizations(settings: PapraSettings): List<Organization> = withContext(Dispatchers.IO) {
+        val base = normalizeInstanceUrl(settings.instanceUrl)
+        val request = Request.Builder()
+            .url("$base/api/organizations")
+            .header("Authorization", "Bearer ${settings.apiKey.trim()}")
+            .header("Accept", "application/json")
+            .get()
+            .build()
+
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                throw PapraApiException(httpToErrorKind(response.code))
+            }
+            parseOrganizations(response.body?.string().orEmpty())
+        }
+    }
+
+
     /** Détails bruts utiles au bouton « Détails » (non localisés). */
     private fun fullError(code: Int, status: String, body: String): String {
         val parts = mutableListOf<String>()
@@ -137,3 +169,10 @@ class PapraApi {
     private fun String.toMediaTypeOrNull(): okhttp3.MediaType? =
         runCatching { toMediaType() }.getOrNull()
 }
+
+/**
+ * Échec typé d'une requête API *non bloquante* pour le flux de partage
+ * (liste des organisations). Porte la catégorie d'erreur ([PapraErrorKind])
+ * pour permettre un message contextualisé, sans faire avorter l'envoi.
+ */
+class PapraApiException(val kind: PapraErrorKind) : Exception("Papra API error: $kind")

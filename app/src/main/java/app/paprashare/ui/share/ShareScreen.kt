@@ -17,14 +17,21 @@ import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.paprashare.R
+import app.paprashare.domain.Organization
 import app.paprashare.domain.PapraErrorKind
 import app.paprashare.ui.theme.PapraTheme
 import app.paprashare.util.SharedDocument
@@ -47,6 +55,8 @@ fun ShareScreen(
     onOpenSettings: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val organizations by viewModel.organizations.collectAsStateWithLifecycle()
+    val selectedOrgId by viewModel.selectedOrganizationId.collectAsStateWithLifecycle()
     val showDetails = remember { MutableStateFlow(false) }
     val showDetailsValue by showDetails.collectAsStateWithLifecycle()
 
@@ -64,11 +74,18 @@ fun ShareScreen(
                         CircularProgressIndicator()
                     }
 
-                    is ShareUiState.Ready -> ShareContent(
-                        viewModel = viewModel,
-                        isConfigured = (state as ShareUiState.Ready).isConfigured,
-                        onOpenSettings = onOpenSettings,
-                    )
+                    is ShareUiState.Ready -> {
+                        val ready = state as ShareUiState.Ready
+                        ShareContent(
+                            documents = viewModel.documents,
+                            onUpload = { viewModel.upload() },
+                            isConfigured = ready.isConfigured,
+                            organizations = organizations,
+                            selectedOrganizationId = selectedOrgId,
+                            onSelectOrganization = { viewModel.selectOrganization(it) },
+                            onOpenSettings = onOpenSettings,
+                        )
+                    }
 
                     is ShareUiState.Uploading -> {
                         CircularProgressIndicator()
@@ -168,15 +185,34 @@ fun ShareScreen(
 
 @Composable
 private fun ShareContent(
-    viewModel: ShareViewModel,
+    documents: List<SharedDocument>,
+    onUpload: () -> Unit,
     isConfigured: Boolean,
+    organizations: List<Organization>,
+    selectedOrganizationId: String,
+    onSelectOrganization: (String) -> Unit,
     onOpenSettings: () -> Unit,
 ) {
-    Header(viewModel.documents)
+    Header(documents)
     Spacer(Modifier.height(20.dp))
     if (isConfigured) {
+        if (organizations.isNotEmpty()) {
+            OrganizationPicker(
+                organizations = organizations,
+                selectedId = selectedOrganizationId,
+                onSelect = onSelectOrganization,
+            )
+            Spacer(Modifier.height(12.dp))
+        } else {
+            Text(
+                text = stringResource(R.string.share_orgs_unavailable),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(12.dp))
+        }
         Button(
-            onClick = { viewModel.upload() },
+            onClick = onUpload,
             modifier = Modifier.fillMaxWidth(),
         ) {
             Icon(Icons.Default.UploadFile, contentDescription = null)
@@ -192,6 +228,49 @@ private fun ShareContent(
             Spacer(Modifier.height(12.dp))
             Button(onClick = onOpenSettings, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.share_not_configured_action))
+            }
+        }
+    }
+}
+
+/** Menu déroulant de choix de l'organisation cible, pour l'envoi en cours. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun OrganizationPicker(
+    organizations: List<Organization>,
+    selectedId: String,
+    onSelect: (String) -> Unit,
+) {
+    val expanded = remember { mutableStateOf(false) }
+    val current = organizations.firstOrNull { it.id == selectedId }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded.value,
+        onExpandedChange = { expanded.value = it },
+    ) {
+        OutlinedTextField(
+            value = current?.name ?: selectedId,
+            onValueChange = {},
+            readOnly = true,
+            singleLine = true,
+            label = { Text(stringResource(R.string.share_org_label)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded.value) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+        )
+        ExposedDropdownMenu(
+            expanded = expanded.value,
+            onDismissRequest = { expanded.value = false },
+        ) {
+            organizations.forEach { org ->
+                DropdownMenuItem(
+                    text = { Text(org.name) },
+                    onClick = {
+                        onSelect(org.id)
+                        expanded.value = false
+                    },
+                )
             }
         }
     }
