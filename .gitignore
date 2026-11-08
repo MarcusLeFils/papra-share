@@ -25,6 +25,9 @@ app/build/
 # Divers
 .DS_Store
 
+# Notes de plan de l'agent (non versionnées)
+.hermes/
+
 # Signature — keystore privé (secret, jamais publié)
 .signing/
 .env

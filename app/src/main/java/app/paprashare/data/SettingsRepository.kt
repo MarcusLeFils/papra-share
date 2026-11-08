@@ -13,12 +13,7 @@ data class PapraSettings(
     val instanceUrl: String = "",
     val apiKey: String = "",
     val organizationId: String = "",
-) {
-    val isConfigured: Boolean
-        get() = instanceUrl.isNotBlank() &&
-            apiKey.isNotBlank() &&
-            organizationId.isNotBlank()
-}
+)
 
 private val Context.dataStore by preferencesDataStore(name = "papra_settings")
 

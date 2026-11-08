@@ -7,7 +7,7 @@
     <string name="settings_instance_url_hint">https://api.papra.app</string>
     <string name="settings_api_key_label">Clé API</string>
     <string name="settings_org_id_label">ID d\u2019organisation</string>
-    <string name="settings_org_id_hint">Identifiant de l\u2019organisation cible</string>
+    <string name="settings_org_id_hint">Identifiant de l\u2019organisation cible (facultatif si la clé liste les organisations)</string>
     <string name="settings_save">Enregistrer</string>
     <string name="settings_saved">Configuration enregistrée.</string>
     <string name="settings_permission_hint">Votre clé API doit disposer de documents:create ; ajoutez organizations:read pour choisir l\u2019organisation au partage.</string>
@@ -17,11 +17,13 @@
     <string name="share_uploading">Envoi en cours…</string>
     <string name="share_not_configured">Papra n\u2019est pas configuré. Ouvrez l\u2019application pour renseigner l\u2019URL, la clé API et l\u2019ID d\u2019organisation.</string>
     <string name="share_not_configured_action">Ouvrir les réglages</string>
+    <string name="share_no_destination">Aucune organisation cible. Renseignez un ID d\u2019organisation dans les réglages, ou accordez la permission organizations:read à votre clé API.</string>
     <string name="share_close">Fermer</string>
     <string name="share_show_details">Détails</string>
     <string name="share_hide_details">Masquer les détails</string>
 
     <string name="share_org_label">Organisation de destination</string>
+    <string name="share_orgs_loading">Chargement des organisations…</string>
     <string name="share_orgs_unavailable">Choix de l\u2019organisation indisponible : envoi vers l\u2019organisation configurée.</string>
 
     <string name="share_error_open_file">Impossible d\u2019ouvrir « %1$s ».</string>

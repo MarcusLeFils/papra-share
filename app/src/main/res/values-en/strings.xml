@@ -7,7 +7,7 @@
     <string name="settings_instance_url_hint">https://api.papra.app</string>
     <string name="settings_api_key_label">API key</string>
     <string name="settings_org_id_label">Organization ID</string>
-    <string name="settings_org_id_hint">ID of the destination organization</string>
+    <string name="settings_org_id_hint">ID of the destination organization (optional if the key can list organizations)</string>
     <string name="settings_save">Save</string>
     <string name="settings_saved">Configuration saved.</string>
     <string name="settings_permission_hint">Your API key needs documents:create; add organizations:read to pick the organization when sharing.</string>
@@ -17,11 +17,13 @@
     <string name="share_uploading">Uploading…</string>
     <string name="share_not_configured">Papra is not configured. Open the app to set your instance URL, API key and organization ID.</string>
     <string name="share_not_configured_action">Open settings</string>
+    <string name="share_no_destination">No destination organization. Set an organization ID in settings, or grant the organizations:read permission to your API key.</string>
     <string name="share_close">Close</string>
     <string name="share_show_details">Details</string>
     <string name="share_hide_details">Hide details</string>
 
     <string name="share_org_label">Destination organization</string>
+    <string name="share_orgs_loading">Loading organizations…</string>
     <string name="share_orgs_unavailable">Organization list unavailable: sending to the configured organization.</string>
 
     <string name="share_error_open_file">Could not open “%1$s”.</string>

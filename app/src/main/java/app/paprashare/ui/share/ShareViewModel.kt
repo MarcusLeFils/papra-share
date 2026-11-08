@@ -28,8 +28,19 @@ import kotlinx.coroutines.launch
 sealed class ShareUiState {
     object Loading : ShareUiState()
 
-    /** Prêt à envoyer. @param isConfigured réglages complets (URL + clé + organisation sauvegardée). */
-    data class Ready(val isConfigured: Boolean) : ShareUiState()
+    /**
+     * Prêt à envoyer.
+     * @param credentialsConfigured  URL + clé API présents (simple présence de champs).
+     * @param destinationAvailable   l'envoi est possible : une organisation de destination
+     *   existe (ID sauvegardé) OU la liste des organisations est disponible (choix au moment
+     *   du partage). Rend l'ID d'organisation configuré OPTIONNEL quand la clé a
+     *   `organizations:read` — c'était le seul blocage si seulement URL + clé étaient posés.
+     */
+    data class Ready(
+        val credentialsConfigured: Boolean,
+        val destinationAvailable: Boolean,
+        val organizationsLoading: Boolean = false,
+    ) : ShareUiState()
     object Uploading : ShareUiState()
     data class Success(val count: Int) : ShareUiState()
 
@@ -62,8 +73,17 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
     private var _documents: List<SharedDocument> = emptyList()
     val documents: List<SharedDocument> get() = _documents
 
-    /** Statut de configuration, recalculé à chaque init (lecture synchrone). */
-    private var _configured = false
+    /**
+     * URL + clé API présents (simple présence de champs — aucune vérification
+     * de réseau ici), recalculé à chaque init.
+     */
+    private var _credentialsConfigured = false
+
+    /** ID d'organisation sauvegardé (désormais optionnel). */
+    private var _savedOrganizationId = ""
+
+    /** Le rafraîchissement réseau de la liste est terminé (succès ou échec). */
+    private var _orgFetchSettled = false
 
     /** Organisations disponibles (obtenues du réseau ou du cache). */
     private val _organizations = MutableStateFlow<List<Organization>>(emptyList())
@@ -90,7 +110,8 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = ShareUiState.Loading
         viewModelScope.launch {
             val settings = settingsRepository.settings.first()
-            _configured = settings.isConfigured
+            _credentialsConfigured = settings.instanceUrl.isNotBlank() && settings.apiKey.isNotBlank()
+            _savedOrganizationId = settings.organizationId
 
             val cached = parseOrganizations(settingsRepository.organizationsCache.first())
             val lastUsedId = settingsRepository.lastOrganizationId.first().takeIf { it.isNotBlank() }
@@ -101,10 +122,10 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
                 lastUsedId = lastUsedId,
             ) ?: settings.organizationId
             // Prêt dès le cache : le réseau ne bloque jamais.
-            _state.value = ShareUiState.Ready(_configured)
+            emitReady()
 
-            // Rafraîchissement best-effort en arrière-plan (si configuré).
-            if (_configured) {
+            // Rafraîchissement best-effort en arrière-plan (si URL + clé présents).
+            if (_credentialsConfigured) {
                 try {
                     val fresh = api.getOrganizations(settings)
                     if (fresh.isNotEmpty()) {
@@ -125,8 +146,41 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
                     // Liste indisponible → on garde le cache (éventuellement vide) ;
                     // le repli sur l'organisation sauvegardée reste en place.
                 }
+                // Fin du rafraîchissement : « chargement des organisations » bascule
+                // vers l'état terminal (liste trouvée, vide, ou échec). Re-émettre
+                // Ready, mais ne jamais écraser un Uploading en cours.
+                _orgFetchSettled = true
+                if (_state.value is ShareUiState.Ready) emitReady()
             }
         }
+    }
+
+    /**
+     * Une destination d'envoi est-elle disponible ? URL + clé présents ET
+     * (organisation sauvegardée OU liste d'organisations chargée).
+     *
+     * Invariant de session : `_organizations` ne fait que grandir (jamais vidé),
+     * `_credentialsConfigured` et `_savedOrganizationId` sont figés à l'init —
+     * donc l'état Ready émis (dérivé de cette fonction) ne peut jamais annoncer
+     * un bouton d'envoi que la garde d'upload refuserait ensuite.
+     */
+    private fun canReachDestination() =
+        _credentialsConfigured && (_savedOrganizationId.isNotBlank() || _organizations.value.isNotEmpty())
+
+    /** Re-calcule et émet l'état Ready courant. */
+    private fun emitReady() {
+        // « Chargement des organisations » : rafraîchissement réseau pas encore
+        // terminé et aucune destination connue — éviter un message d'impasse
+        // erroné (« accordez organizations:read ») pendant le trajet réseau.
+        val loadingOrgs = _credentialsConfigured &&
+            _savedOrganizationId.isBlank() &&
+            _organizations.value.isEmpty() &&
+            !_orgFetchSettled
+        _state.value = ShareUiState.Ready(
+            credentialsConfigured = _credentialsConfigured,
+            destinationAvailable = canReachDestination(),
+            organizationsLoading = loadingOrgs,
+        )
     }
 
     /** L'utilisateur choisit l'organisation cible du partage en cours. */
@@ -136,14 +190,16 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * Lance l'envoi des documents courants. Sans argument : source unique = _documents.
-     * L'écran n'expose le bouton d'upload que si `isConfigured` — les gardes « aucun
-     * document » et « non configuré » sont donc défensives et restent sans message.
+     * Lance l'envoi des documents courants. La cible est le choix du moment
+     * (sélecteur) ou, à défaut, l'ID sauvegardé.
      */
     fun upload() {
         if (_state.value is ShareUiState.Uploading) return
         val toSend = _documents
-        if (toSend.isEmpty() || !_configured) return
+        // Destination : organisation sauvegardée, ou choix du moment si la liste est là.
+        // Les gardes « aucun document » et « destination indisponible » sont donc
+        // défensives (le bouton n'est exposé que si destinationAvailable) et sans message.
+        if (toSend.isEmpty() || !canReachDestination()) return
 
         // Anti-réentrance : basculer AVANT tout await (un second appui ne doit
         // pas lancer une coroutine concurrente, sinon double envoi).
@@ -154,7 +210,7 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
             val context = getApplication<Application>()
 
             // La cible est le choix du moment (sélecteur) ; à défaut, ID sauvegardé.
-            val orgId = _selectedOrganizationId.value.ifBlank { settings.organizationId }
+            val orgId = _selectedOrganizationId.value.ifBlank { _savedOrganizationId }
             val settingsForUpload = settings.copy(organizationId = orgId)
 
             // Upload séquentiel : chaque échec est annoté du nom du document fautif.

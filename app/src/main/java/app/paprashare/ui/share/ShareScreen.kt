@@ -79,7 +79,9 @@ fun ShareScreen(
                         ShareContent(
                             documents = viewModel.documents,
                             onUpload = { viewModel.upload() },
-                            isConfigured = ready.isConfigured,
+                            credentialsConfigured = ready.credentialsConfigured,
+                            destinationAvailable = ready.destinationAvailable,
+                            organizationsLoading = ready.organizationsLoading,
                             organizations = organizations,
                             selectedOrganizationId = selectedOrgId,
                             onSelectOrganization = { viewModel.selectOrganization(it) },
@@ -187,7 +189,9 @@ fun ShareScreen(
 private fun ShareContent(
     documents: List<SharedDocument>,
     onUpload: () -> Unit,
-    isConfigured: Boolean,
+    credentialsConfigured: Boolean,
+    destinationAvailable: Boolean,
+    organizationsLoading: Boolean,
     organizations: List<Organization>,
     selectedOrganizationId: String,
     onSelectOrganization: (String) -> Unit,
@@ -195,39 +199,71 @@ private fun ShareContent(
 ) {
     Header(documents)
     Spacer(Modifier.height(20.dp))
-    if (isConfigured) {
-        if (organizations.isNotEmpty()) {
-            OrganizationPicker(
-                organizations = organizations,
-                selectedId = selectedOrganizationId,
-                onSelect = onSelectOrganization,
-            )
-            Spacer(Modifier.height(12.dp))
-        } else {
-            Text(
-                text = stringResource(R.string.share_orgs_unavailable),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(12.dp))
+    when {
+        !credentialsConfigured -> {
+            // URL ou clé API absents : il faut renseigner les réglages.
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = stringResource(R.string.share_not_configured),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Spacer(Modifier.height(12.dp))
+                Button(onClick = onOpenSettings, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.share_not_configured_action))
+                }
+            }
         }
-        Button(
-            onClick = onUpload,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Icon(Icons.Default.UploadFile, contentDescription = null)
-            Spacer(Modifier.size(8.dp))
-            Text(stringResource(R.string.share_title))
+        !destinationAvailable -> {
+            when {
+                organizationsLoading -> {
+                    // Liste en cours de rafraîchissement : pas de conclusion hâtive
+                    // (« accordez organizations:read » serait faux pendant le trajet réseau).
+                    CircularProgressIndicator(modifier = Modifier.size(28.dp))
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.share_orgs_loading),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                else -> {
+                    // URL + clé présents mais aucune organisation cible : ni ID configuré,
+                    // ni liste exploitable → poser un ID ou accorder organizations:read à la clé.
+                    Text(
+                        text = stringResource(R.string.share_no_destination),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Button(onClick = onOpenSettings, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.share_not_configured_action))
+                    }
+                }
+            }
         }
-    } else {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = stringResource(R.string.share_not_configured),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Spacer(Modifier.height(12.dp))
-            Button(onClick = onOpenSettings, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.share_not_configured_action))
+        else -> {
+            if (organizations.isNotEmpty()) {
+                OrganizationPicker(
+                    organizations = organizations,
+                    selectedId = selectedOrganizationId,
+                    onSelect = onSelectOrganization,
+                )
+                Spacer(Modifier.height(12.dp))
+            } else {
+                // Liste indisponible → envoi vers l'organisation sauvegardée.
+                Text(
+                    text = stringResource(R.string.share_orgs_unavailable),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(12.dp))
+            }
+            Button(
+                onClick = onUpload,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(Icons.Default.UploadFile, contentDescription = null)
+                Spacer(Modifier.size(8.dp))
+                Text(stringResource(R.string.share_title))
             }
         }
     }
