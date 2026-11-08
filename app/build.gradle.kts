@@ -15,7 +15,10 @@ plugins {
 
 android {
     namespace = "app.paprashare"
-    compileSdk = 36
+    // Compile SDK 37 : exigé par les versions récentes des dépendances
+    // (okhttp 5, core-ktx 1.19, Compose 1.12). targetSdk reste 36 pour l'instant
+    // (montée séparée, après revalidation appareil des comportements Android 17).
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "app.paprashare"
