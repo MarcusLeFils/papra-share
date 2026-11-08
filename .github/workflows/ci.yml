@@ -111,7 +111,11 @@ jobs:
           # épinglé : 2.13 local vs 2.14 CI). On passe la plage de tags explicite
           # (prevTag..currentTag) : `--latest`/`--current` sont volatils entre
           # versions et produisaient un corps de release vide.
-          PREV_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]' \
+          # Exclut les tags de pré-version (v2.0.0-rc1…) : le tag de base doit
+          # toujours être le dernier tag *stable*, sinon une release stable
+          # consécutive à une pré-version reposerait sur une plage vide
+          # (v2.0.0-rc1..v2.0.0 = aucun commit) et publierait un corps vide.
+          PREV_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]' | grep -v '-' \
                       | awk -v cur="$GITHUB_REF_NAME" '$0!=cur{print; exit}')
           nix develop --command git-cliff -- "${PREV_TAG}..${GITHUB_REF_NAME}" \
             > /tmp/release-notes.md
